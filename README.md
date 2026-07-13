@@ -4,7 +4,13 @@ FeedbackKit is a SwiftUI package for showing an in-app feedback sheet. It provid
 
 ## Installation
 
-Add `Packages/FeedbackKit` as a local Swift Package dependency, then add the `FeedbackKit` library to your app target.
+Add this repository as a Swift Package dependency:
+
+```text
+https://github.com/sugijotaro/FeedbackKit
+```
+
+Then add the `FeedbackKit` library to the app target.
 
 ## Basic Usage
 
@@ -37,4 +43,47 @@ FeedbackSheet(appName: "ColorCam") { feedback in
 }
 ```
 
-Firebase, API calls, and other network handling should be implemented by the host app.
+Firebase, API calls, and other network handling are implemented by the host app. FeedbackKit itself remains UI-only.
+
+## Agent Skills
+
+This repository also contains Agent Skills for implementing the Firebase backend in an existing app repository.
+
+List the available skills:
+
+```bash
+npx skills add sugijotaro/FeedbackKit --list
+```
+
+### 1. Store feedback in Firestore
+
+```bash
+npx skills add sugijotaro/FeedbackKit \
+  --skill integrate-feedbackkit-firebase \
+  --agent codex \
+  -y
+```
+
+This skill adds the Swift FirebaseFunctions submitter, callable `submitFeedback` function, validation, rate limiting, locked-down Firestore rules, and the `feedback/{feedbackId}` schema.
+
+### 2. Analyze feedback and create GitHub Issues
+
+```bash
+npx skills add sugijotaro/FeedbackKit \
+  --skill automate-feedback-github-issues \
+  --agent codex \
+  -y
+```
+
+This second skill extends the Firebase backend with:
+
+- a Firestore create trigger;
+- Gemini analysis through Vertex AI using the Cloud Functions runtime service account;
+- no Gemini API key in the app or source code;
+- structured triage, prioritization, sensitive-data checks, and duplicate handling;
+- GitHub App authentication with short-lived installation tokens;
+- automatic GitHub Issue creation for qualifying bug reports and feature requests.
+
+The GitHub App private key must be stored in Secret Manager. GitHub cannot create Issues without authentication.
+
+Run the first skill before the second when the app does not yet store FeedbackKit submissions in Firestore.
