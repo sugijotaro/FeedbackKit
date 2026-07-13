@@ -6,16 +6,16 @@ public enum FeedbackCategory: String, CaseIterable, Sendable {
     case feedback
     case other
 
-    public var localizedTitle: LocalizedStringResource {
+    public var localizedTitle: String {
         switch self {
         case .bug:
-            "feedback.category.bug"
+            String(localized: "feedback.category.bug", bundle: .module)
         case .featureRequest:
-            "feedback.category.featureRequest"
+            String(localized: "feedback.category.featureRequest", bundle: .module)
         case .feedback:
-            "feedback.category.feedback"
+            String(localized: "feedback.category.feedback", bundle: .module)
         case .other:
-            "feedback.category.other"
+            String(localized: "feedback.category.other", bundle: .module)
         }
     }
 }

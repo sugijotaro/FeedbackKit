@@ -39,19 +39,23 @@ public struct FeedbackSheet: View {
                     formContent
                 }
             }
-            .navigationTitle("feedback.title")
+            .navigationTitle(Text("feedback.title", bundle: .module))
             .feedbackNavigationTitleDisplayMode()
             .toolbar {
                 if isCompleted {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("feedback.close") {
+                        Button {
                             dismiss()
+                        } label: {
+                            Text("feedback.close", bundle: .module)
                         }
                     }
                 } else {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("feedback.cancel", role: .cancel) {
+                        Button(role: .cancel) {
                             dismiss()
+                        } label: {
+                            Text("feedback.cancel", bundle: .module)
                         }
                         .disabled(isSubmitting)
                     }
@@ -63,7 +67,7 @@ public struct FeedbackSheet: View {
                             if isSubmitting {
                                 ProgressView()
                             } else {
-                                Text("feedback.submit")
+                                Text("feedback.submit", bundle: .module)
                             }
                         }
                         .disabled(!canSubmit)
@@ -71,8 +75,10 @@ public struct FeedbackSheet: View {
 
                     ToolbarItemGroup(placement: .keyboard) {
                         Spacer()
-                        Button("feedback.keyboard.done") {
+                        Button {
                             isMessageFocused = false
+                        } label: {
+                            Text("feedback.keyboard.done", bundle: .module)
                         }
                     }
                 }
@@ -85,26 +91,31 @@ public struct FeedbackSheet: View {
     private var formContent: some View {
         Form {
             Section {
-                Text("feedback.description")
+                Text("feedback.description", bundle: .module)
                     .font(.body)
                     .foregroundStyle(.secondary)
             }
 
-            Section("feedback.category.title") {
-                Picker("feedback.category.title", selection: $category) {
+            Section {
+                Picker(selection: $category) {
                     ForEach(FeedbackCategory.allCases, id: \.self) { category in
                         Text(category.localizedTitle)
                             .tag(category)
                     }
+                } label: {
+                    Text("feedback.category.title", bundle: .module)
                 }
+                .labelsHidden()
                 .pickerStyle(.inline)
                 .disabled(isSubmitting)
+            } header: {
+                Text("feedback.category.title", bundle: .module)
             }
 
             Section {
                 ZStack(alignment: .topLeading) {
                     if message.isEmpty {
-                        Text("feedback.message.placeholder")
+                        Text("feedback.message.placeholder", bundle: .module)
                             .foregroundStyle(.tertiary)
                             .padding(.top, 8)
                             .padding(.leading, 5)
@@ -115,7 +126,7 @@ public struct FeedbackSheet: View {
                         .focused($isMessageFocused)
                         .frame(minHeight: 180)
                         .disabled(isSubmitting)
-                        .accessibilityLabel(Text("feedback.message.accessibilityLabel"))
+                        .accessibilityLabel(Text("feedback.message.accessibilityLabel", bundle: .module))
                         .onChange(of: message) { _ in
                             if message.count > Constants.maximumMessageLength {
                                 message = String(message.prefix(Constants.maximumMessageLength))
@@ -123,26 +134,26 @@ public struct FeedbackSheet: View {
                             errorMessage = nil
                         }
                 }
-
-                HStack {
-                    Spacer()
-                    Text("\(message.count)/\(Constants.maximumMessageLength)")
-                        .font(.footnote)
-                        .foregroundStyle(message.count > Constants.maximumMessageLength ? .red : .secondary)
-                        .monospacedDigit()
-                        .accessibilityLabel(Text("feedback.characterCount \(message.count) \(Constants.maximumMessageLength)"))
-                }
             } header: {
-                Text("feedback.message.title")
+                Text("feedback.message.title", bundle: .module)
             } footer: {
-                Text("feedback.message.requirement")
+                HStack(alignment: .firstTextBaseline) {
+                    Text("feedback.message.requirement", bundle: .module)
+
+                    Spacer(minLength: 12)
+
+                    Text(verbatim: "\(message.count)/\(Constants.maximumMessageLength)")
+                        .monospacedDigit()
+                        .foregroundStyle(isMessageLengthValid ? Color.secondary : Color.red)
+                        .accessibilityLabel(characterCountAccessibilityLabel)
+                }
             }
 
             if let errorMessage {
                 Section {
                     Text(errorMessage)
                         .foregroundStyle(.red)
-                        .accessibilityLabel(Text("feedback.error.accessibilityLabel \(errorMessage)"))
+                        .accessibilityLabel(errorAccessibilityLabel(errorMessage))
                 }
             }
         }
@@ -158,17 +169,19 @@ public struct FeedbackSheet: View {
                 .foregroundStyle(.tint)
                 .accessibilityHidden(true)
 
-            Text("feedback.completed.title")
+            Text("feedback.completed.title", bundle: .module)
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("feedback.completed.message")
+            Text("feedback.completed.message", bundle: .module)
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            Button("feedback.close") {
+            Button {
                 dismiss()
+            } label: {
+                Text("feedback.close", bundle: .module)
             }
             .buttonStyle(.borderedProminent)
             .padding(.top, 8)
@@ -180,12 +193,34 @@ public struct FeedbackSheet: View {
 
     private var canSubmit: Bool {
         !isSubmitting
-            && trimmedMessage.count >= Constants.minimumMessageLength
+            && isMessageLengthValid
+    }
+
+    private var isMessageLengthValid: Bool {
+        trimmedMessage.count >= Constants.minimumMessageLength
             && message.count <= Constants.maximumMessageLength
     }
 
     private var trimmedMessage: String {
         message.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var characterCountAccessibilityLabel: Text {
+        let format = NSLocalizedString(
+            "feedback.characterCount %lld %lld",
+            bundle: .module,
+            comment: "Accessibility label for feedback character count"
+        )
+        return Text(String(format: format, message.count, Constants.maximumMessageLength))
+    }
+
+    private func errorAccessibilityLabel(_ errorMessage: String) -> Text {
+        let format = NSLocalizedString(
+            "feedback.error.accessibilityLabel %@",
+            bundle: .module,
+            comment: "Accessibility label for feedback submission error"
+        )
+        return Text(String(format: format, errorMessage))
     }
 
     private func submit() {
