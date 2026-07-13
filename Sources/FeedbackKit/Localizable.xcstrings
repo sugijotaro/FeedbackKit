@@ -98,6 +98,7 @@
       }
     },
     "feedback.characterCount %lld %lld" : {
+      "comment" : "Accessibility label for feedback character count",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -178,6 +179,7 @@
       }
     },
     "feedback.error.accessibilityLabel %@" : {
+      "comment" : "Accessibility label for feedback submission error",
       "localizations" : {
         "en" : {
           "stringUnit" : {
