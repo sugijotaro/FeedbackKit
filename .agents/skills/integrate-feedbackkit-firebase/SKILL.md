@@ -23,18 +23,22 @@ If region is omitted in Swift, Firebase looks in the SDK default region. A deplo
 
 ## Firebase Functions Files
 
-If the app repo has no Firebase Functions setup, add:
+If the app repo has no Firebase Functions setup, create a dedicated `firebase/` directory in the app repo and add Firebase-related files inside it:
 
 ```text
-.firebaserc
-firebase.json
-functions/package.json
-functions/index.js
+firebase/.firebaserc
+firebase/firebase.json
+firebase/firestore.rules
+firebase/functions/package.json
+firebase/functions/src/index.ts
+firebase/functions/tsconfig.json
 ```
 
-Use JavaScript unless the repo already has TypeScript Functions.
+Use TypeScript by default. If the app repo already has Firebase Functions in another location or language, follow the existing setup instead of moving unrelated files.
 
-### `.firebaserc`
+Run Firebase CLI commands from the `firebase/` directory unless the repo already has a different convention.
+
+### `firebase/.firebaserc`
 
 Set the default project to the app's Firebase project id:
 
@@ -46,7 +50,7 @@ Set the default project to the app's Firebase project id:
 }
 ```
 
-### `firebase.json`
+### `firebase/firebase.json`
 
 ```json
 {
@@ -60,6 +64,55 @@ Set the default project to the app's Firebase project id:
   "firestore": {
     "rules": "firestore.rules"
   }
+}
+```
+
+Paths in `firebase/firebase.json` are relative to the `firebase/` directory, so `source: "functions"` points to `firebase/functions`.
+
+### `firebase/functions/package.json`
+
+Use a TypeScript Functions package:
+
+```json
+{
+  "name": "app-feedback-functions",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "serve": "npm run build && firebase emulators:start --only functions,firestore",
+    "deploy": "npm run build && firebase deploy --only functions:submitFeedback,firestore:rules"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}
+```
+
+### `firebase/functions/tsconfig.json`
+
+```json
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2020",
+    "lib": ["es2020"],
+    "outDir": "lib",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src"]
 }
 ```
 
@@ -108,10 +161,10 @@ Do not log or store raw feedback message in Analytics. Logging category is fine.
 
 ## Validation
 
-1. Run package install in `functions/`.
-2. Run a syntax check: `node --check functions/index.js`.
+1. Run package install in `firebase/functions/`.
+2. Run the TypeScript check/build from `firebase/functions`: `npm run lint` and `npm run build`.
 3. Build the iOS app.
-4. Deploy when ready:
+4. Deploy from `firebase/` when ready:
 
 ```bash
 firebase deploy --only functions:submitFeedback,firestore:rules
