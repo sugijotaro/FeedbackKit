@@ -128,8 +128,8 @@ public struct FeedbackSheet: View {
                         .disabled(isSubmitting)
                         .accessibilityLabel(Text("feedback.message.accessibilityLabel", bundle: .module))
                         .onChange(of: message) { _ in
-                            if message.count > Constants.maximumMessageLength {
-                                message = String(message.prefix(Constants.maximumMessageLength))
+                            if message.count > FeedbackValidation.maximumMessageLength {
+                                message = FeedbackValidation.limitedMessage(message)
                             }
                             errorMessage = nil
                         }
@@ -142,7 +142,7 @@ public struct FeedbackSheet: View {
 
                     Spacer(minLength: 12)
 
-                    Text(verbatim: "\(message.count)/\(Constants.maximumMessageLength)")
+                    Text(verbatim: "\(message.count)/\(FeedbackValidation.maximumMessageLength)")
                         .monospacedDigit()
                         .foregroundStyle(isMessageLengthValid ? Color.secondary : Color.red)
                         .accessibilityLabel(characterCountAccessibilityLabel)
@@ -192,17 +192,15 @@ public struct FeedbackSheet: View {
     }
 
     private var canSubmit: Bool {
-        !isSubmitting
-            && isMessageLengthValid
+        !isSubmitting && isMessageLengthValid
     }
 
     private var isMessageLengthValid: Bool {
-        trimmedMessage.count >= Constants.minimumMessageLength
-            && message.count <= Constants.maximumMessageLength
+        FeedbackValidation.isValidMessage(message)
     }
 
     private var trimmedMessage: String {
-        message.trimmingCharacters(in: .whitespacesAndNewlines)
+        FeedbackValidation.trimmedMessage(message)
     }
 
     private var characterCountAccessibilityLabel: Text {
@@ -211,7 +209,7 @@ public struct FeedbackSheet: View {
             bundle: .module,
             comment: "Accessibility label for feedback character count"
         )
-        return Text(String(format: format, message.count, Constants.maximumMessageLength))
+        return Text(String(format: format, message.count, FeedbackValidation.maximumMessageLength))
     }
 
     private func errorAccessibilityLabel(_ errorMessage: String) -> Text {
@@ -243,11 +241,6 @@ public struct FeedbackSheet: View {
             isSubmitting = false
         }
     }
-}
-
-private enum Constants {
-    static let minimumMessageLength = 3
-    static let maximumMessageLength = 2_000
 }
 
 private extension View {
