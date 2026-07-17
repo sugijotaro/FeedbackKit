@@ -4,13 +4,7 @@ FeedbackKit is a SwiftUI package for showing an in-app feedback sheet. It provid
 
 ## Installation
 
-Add this repository as a Swift Package dependency:
-
-```text
-https://github.com/sugijotaro/FeedbackKit
-```
-
-Then add the `FeedbackKit` library to the app target.
+Add this repository as a Swift Package dependency, then add the `FeedbackKit` library to your app target.
 
 ## Basic Usage
 
@@ -64,7 +58,7 @@ npx skills add sugijotaro/FeedbackKit \
   -y
 ```
 
-This skill adds the Swift FirebaseFunctions submitter, callable `submitFeedback` function, validation, rate limiting, locked-down Firestore rules, and the `feedback/{feedbackId}` schema.
+This skill adds the Swift FirebaseFunctions submitter, callable `submitFeedback` function, validation, anonymous rate limiting without requiring App Check, locked-down Firestore rules, and the `feedback/{feedbackId}` schema.
 
 ### 2. Analyze feedback and create GitHub Issues
 
@@ -77,11 +71,13 @@ npx skills add sugijotaro/FeedbackKit \
 
 This second skill extends the Firebase backend with:
 
-- a Firestore create trigger;
+- a Firestore create trigger running on Cloud Functions 2nd gen;
 - Gemini analysis through Vertex AI using the Cloud Functions runtime service account;
-- no Gemini API key in the app or source code;
-- structured triage, prioritization, sensitive-data checks, and duplicate handling;
+- the official `@google/genai` SDK, without a Gemini API key in the app or source code;
+- structured triage, prioritization, deterministic sensitive-data checks, and label allowlists;
+- semantic duplicate locks and feedback-specific GitHub operation records;
 - GitHub App authentication with short-lived installation tokens;
+- staged rollout with automatic Issue creation disabled until triage quality is reviewed;
 - automatic GitHub Issue creation for qualifying bug reports and feature requests.
 
 The GitHub App private key must be stored in Secret Manager. GitHub cannot create Issues without authentication.
