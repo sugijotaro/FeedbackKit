@@ -15,12 +15,18 @@ import FeedbackKit
 struct SettingsView: View {
     @State private var isPresented = false
 
+    private var appDisplayName: String {
+        Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleDisplayName"
+        ) as? String ?? "App"
+    }
+
     var body: some View {
         Button("ご意見・ご要望") {
             isPresented = true
         }
         .sheet(isPresented: $isPresented) {
-            FeedbackSheet(appName: "ColorCam") { feedback in
+            FeedbackSheet(appName: appDisplayName) { feedback in
                 print(feedback.category)
                 print(feedback.message)
             }
@@ -32,7 +38,7 @@ struct SettingsView: View {
 ## Async Submission
 
 ```swift
-FeedbackSheet(appName: "ColorCam") { feedback in
+FeedbackSheet(appName: appDisplayName) { feedback in
     try await submitFeedback(feedback)
 }
 ```
