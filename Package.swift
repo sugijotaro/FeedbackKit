@@ -21,6 +21,10 @@ let package = Package(
             resources: [
                 .process("Localizable.xcstrings")
             ]
+        ),
+        .testTarget(
+            name: "FeedbackKitTests",
+            dependencies: ["FeedbackKit"]
         )
     ],
     swiftLanguageModes: [.v6]

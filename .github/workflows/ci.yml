@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  swift:
+    name: Swift package
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show Swift version
+        run: swift --version
+      - name: Run tests
+        run: swift test
+
+  skills:
+    name: Agent Skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate String Catalog JSON
+        run: python3 -m json.tool Sources/FeedbackKit/Localizable.xcstrings > /dev/null
+      - name: Discover repository skills
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx -y skills add . --list | tee /tmp/skills.txt
+          grep -q "integrate-feedbackkit-firebase" /tmp/skills.txt
+          grep -q "automate-feedback-github-issues" /tmp/skills.txt
