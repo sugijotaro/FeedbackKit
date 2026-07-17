@@ -18,7 +18,7 @@ Use this workflow when an app already shows `FeedbackSheet` and needs a working 
 3. Inspect existing Functions location, language, module system, Node runtime, region, and deployment conventions.
 4. Inspect current Firestore rules before editing or deploying them.
 5. Identify the existing settings/help view and Firebase service layer.
-6. Choose a stable lowercase `appId`, such as `colorcam`.
+6. Choose a stable lowercase `appId` derived from the host app's bundle identifier or an existing internal routing key. Do not place an app-specific identifier in this reusable skill.
 
 Do not move unrelated Firebase files, replace an existing architecture, or overwrite unrelated security rules.
 
