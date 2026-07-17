@@ -7,137 +7,100 @@ metadata:
 
 # Integrate FeedbackKit with Firebase
 
-Use this workflow when an app already shows `FeedbackSheet` and needs a working Firebase backend, or when submission fails with `not found` / `FunctionsErrorCode.notFound`.
-
 Implement the integration; do not only document it.
 
-## Required Checks
+Use this workflow when an app already shows `FeedbackSheet` and needs a working Firebase backend, or when submission fails with `not found` / `FunctionsErrorCode.notFound`.
 
-1. Confirm the app's Firebase project from `GoogleService-Info.plist` (`PROJECT_ID`).
-2. Pick one callable function name and region. Default for FeedbackKit integrations:
-   - function name: `submitFeedback`
-   - region: `asia-northeast1`
-3. Choose a stable app identifier such as `colorcam`. This becomes `appId` in Firestore and is later used to route feedback to the correct GitHub repository.
-4. Ensure Swift and Firebase Functions use the same name and region:
-   - Swift: `Functions.functions(region: "asia-northeast1").httpsCallable("submitFeedback")`
-   - Functions: `onCall({ region: "asia-northeast1" }, async (request) => { ... })`
+## Inspect first
 
-If region is omitted in Swift, Firebase looks in the SDK default region. A deployed function in another region will return `not found`.
+1. Read FeedbackKit's current public API instead of guessing initializer or model names.
+2. Confirm the Firebase project from `GoogleService-Info.plist` (`PROJECT_ID`) or the app's existing Firebase configuration.
+3. Inspect existing Functions location, language, module system, Node runtime, region, and deployment conventions.
+4. Inspect current Firestore rules before editing or deploying them.
+5. Identify the existing settings/help view and Firebase service layer.
+6. Choose a stable lowercase `appId`, such as `colorcam`.
 
-## Firebase Functions Files
+Do not move unrelated Firebase files, replace an existing architecture, or overwrite unrelated security rules.
 
-If the app repo has no Firebase Functions setup, create a dedicated `firebase/` directory in the app repo and add Firebase-related files inside it:
+## Function contract
+
+Default when the app has no established convention:
 
 ```text
-firebase/.firebaserc
+function: submitFeedback
+region: asia-northeast1
+```
+
+Swift and Functions must use the same name and region:
+
+```swift
+Functions.functions(region: "asia-northeast1")
+    .httpsCallable("submitFeedback")
+```
+
+```ts
+onCall({ region: "asia-northeast1" }, async (request) => {
+  // ...
+});
+```
+
+A mismatch returns `not found`.
+
+## Typical files
+
+Adapt to the repository. For a new TypeScript backend:
+
+```text
 firebase/firebase.json
-firebase/firestore.rules
 firebase/functions/package.json
-firebase/functions/src/index.ts
+firebase/functions/package-lock.json
 firebase/functions/tsconfig.json
+firebase/functions/src/index.ts
+firebase/functions/src/submitFeedback.ts
+firebase/firestore.rules
+<AppTarget>/Features/Feedback/FeedbackSubmissionService.swift
 ```
 
-Use TypeScript by default. If the app repo already has Firebase Functions in another location or language, follow the existing setup instead of moving unrelated files.
+Keep FeedbackKit UI-only. Firebase code belongs to the host app.
 
-Run Firebase CLI commands from the `firebase/` directory unless the repo already has a different convention.
+## Functions runtime
 
-### `firebase/.firebaserc`
+Use Node 22 or the repository's newer Firebase-supported runtime. Do not downgrade an existing backend.
 
-Set the default project to the app's Firebase project id:
+A minimal package commonly includes:
 
 ```json
 {
-  "projects": {
-    "default": "PROJECT_ID"
-  }
-}
-```
-
-### `firebase/firebase.json`
-
-```json
-{
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "runtime": "nodejs20"
-    }
-  ],
-  "firestore": {
-    "rules": "firestore.rules"
-  }
-}
-```
-
-Paths in `firebase/firebase.json` are relative to the `firebase/` directory, so `source: "functions"` points to `firebase/functions`.
-
-### `firebase/functions/package.json`
-
-Use a TypeScript Functions package:
-
-```json
-{
-  "name": "app-feedback-functions",
-  "private": true,
-  "engines": {
-    "node": "20"
-  },
+  "type": "module",
+  "engines": { "node": "22" },
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
     "lint": "tsc --noEmit",
-    "serve": "npm run build && firebase emulators:start --only functions,firestore",
-    "deploy": "npm run build && firebase deploy --only functions:submitFeedback,firestore:rules"
+    "deploy": "npm run build && firebase deploy --only functions"
   },
   "dependencies": {
-    "firebase-admin": "^13.0.0",
-    "firebase-functions": "^6.0.1"
+    "firebase-admin": "^14.1.0",
+    "firebase-functions": "^7.2.5"
   },
   "devDependencies": {
-    "typescript": "^5.7.0"
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3"
   }
 }
 ```
 
-Use versions compatible with the existing project rather than downgrading or duplicating dependencies.
+Use current compatible versions and commit the lockfile. CI should use `npm ci`.
 
-### `firebase/functions/tsconfig.json`
-
-```json
-{
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2020",
-    "lib": ["es2020"],
-    "outDir": "lib",
-    "rootDir": "src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  },
-  "include": ["src"]
-}
-```
-
-## Swift Submitter
+## Swift submitter
 
 Create a small service in the host app, for example:
 
 ```text
-<AppTarget>/Services/FeedbackSubmissionService.swift
+<AppTarget>/Features/Feedback/FeedbackSubmissionService.swift
 ```
 
-It should call the selected region and function:
-
-```swift
-try await Functions.functions(region: "asia-northeast1")
-    .httpsCallable("submitFeedback")
-    .call(payload)
-```
-
-Build a payload containing:
+It should expose an `async throws` method compatible with FeedbackKit's submission closure and send:
 
 ```text
 schemaVersion: 1
@@ -151,29 +114,30 @@ osVersion: OS version when available
 locale: current locale identifier when available
 ```
 
-Do not send IDFA, device name, email address, Firebase tokens, or persistent device identifiers. Do not log or store raw feedback text in Analytics. Logging only category and success/failure is acceptable.
+Do not send IDFA, device name, email address, Firebase tokens, or persistent device identifiers. Do not log raw feedback in Analytics or application logs.
 
-FeedbackKit remains UI-only. Firebase code belongs to the host app.
+Present FeedbackKit from the app's existing settings/help UI. Preserve the app's tint and navigation conventions.
 
 ## Callable Function
 
-Implement `submitFeedback` with these properties:
+Implement `submitFeedback` with these requirements:
 
-- Use `firebase-functions/v2/https`, `firebase-admin`, and `logger`.
-- Do not require App Check. If the target app already uses App Check successfully, preserve its convention, but do not introduce enforcement by default.
-- Validate every field instead of trusting the Swift client.
-- Require `schemaVersion` to be the supported value.
-- Require `appId` and limit it to a conservative length and safe character set.
-- Allow only `bug`, `featureRequest`, `feedback`, `other` categories.
-- Trim the message and require 3...2000 characters.
-- Accept only known optional metadata fields with conservative length limits.
-- Reject unknown, malformed, or oversized input with `HttpsError("invalid-argument", ...)`.
-- Add lightweight server-side rate limiting so anonymous apps cannot spam.
-- Throw stable error codes such as `invalid-argument`, `resource-exhausted`, and `internal`.
-- Set timestamps on the server.
-- Return only `{ success: true, feedbackId }`.
+- use Cloud Functions 2nd gen, Firebase Admin SDK, and structured logging;
+- do not require App Check by default;
+- preserve existing App Check enforcement only when the app already supports it reliably;
+- validate the payload as an exact object and reject unknown fields;
+- require `schemaVersion: 1`;
+- validate `appId` against a conservative safe-character pattern;
+- allow only `bug`, `featureRequest`, `feedback`, and `other`;
+- trim and require a message of 3 through 2,000 characters;
+- validate optional metadata with conservative limits;
+- set timestamps on the server;
+- return only `{ success: true, feedbackId }`;
+- emit stable `HttpsError` codes such as `invalid-argument`, `resource-exhausted`, and `internal`.
 
-Write this minimum Firestore shape:
+Add lightweight server-side rate limiting for anonymous apps. Prefer Firebase Auth UID when available. Otherwise hash the runtime-resolved request address; never store a raw IP address or copy it into the feedback document. Add an expiry timestamp and document Firestore TTL cleanup.
+
+Write:
 
 ```text
 feedback/{feedbackId}
@@ -192,59 +156,76 @@ feedback/{feedbackId}
   updatedAt: server timestamp
 ```
 
-`status: "pending"` is required so the optional `automate-feedback-github-issues` skill can claim and process the document later.
+`status: "pending"` is required for the optional `automate-feedback-github-issues` processor.
 
-Do not store raw IP addresses. If rate limiting uses a request-derived address, hash it before storing the limiter key, apply expiry or cleanup, and do not copy it into the feedback document.
+## Firestore rules safety
 
-## Firestore Rules
-
-If feedback writes only happen through Admin SDK in Cloud Functions, users do not need direct Firestore access. Merge locked-down rules with the app's existing rules:
+Feedback is written by Firebase Admin SDK, so mobile clients do not need direct access. The feedback collections should be server-only:
 
 ```text
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /feedback/{document=**} {
-      allow read, write: if false;
-    }
-  }
+match /feedback/{document=**} {
+  allow read, write: if false;
+}
+match /feedbackRateLimits/{document=**} {
+  allow read, write: if false;
 }
 ```
 
-Do not overwrite unrelated rules. Admin SDK writes from Functions bypass client Firestore rules.
+However, Firebase CLI rule deployment replaces the currently deployed Firestore ruleset. Therefore:
+
+1. inspect the active rules in the Firebase console or the repository's authoritative rules source;
+2. merge the feedback blocks into those existing rules;
+3. preserve every unrelated application rule;
+4. test the merged rules with the Emulator or Rules Playground;
+5. deploy Rules separately from Functions.
+
+Do not make `firebase deploy --only functions,firestore:rules` the default command for an existing project.
+
+Deploy Functions first:
+
+```bash
+firebase deploy --only functions:submitFeedback
+```
+
+Deploy the reviewed merged Rules separately:
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+If no authoritative local rules file exists, do not invent a replacement ruleset and deploy it. Leave a clearly marked rules snippet and report that console review is required.
 
 ## Validation
 
-1. Run package installation in `firebase/functions/`.
-2. Run `npm run lint` and `npm run build` from `firebase/functions/`.
-3. Build the iOS app.
-4. Run the emulator when available and submit a valid and invalid payload.
-5. Deploy from `firebase/` when ready:
+Before finishing:
 
-```bash
-firebase deploy --only functions:submitFeedback,firestore:rules
-```
+1. install dependencies with `npm ci` or the repository's package manager;
+2. run TypeScript type-check and build;
+3. build the iOS app, not only resolve packages;
+4. submit valid, blank, oversized, malformed, and rapid-repeat payloads through the Emulator when available;
+5. deploy only the callable Function first;
+6. submit one item from the app and confirm exactly one `feedback/{feedbackId}` document with server timestamps and `status: "pending"`;
+7. review and merge Firestore rules before any Rules deployment;
+8. confirm logs contain neither the message nor request address.
 
-If `firebase` is not installed, use `npx firebase-tools deploy ...`.
-
-6. Submit one item from the app and confirm exactly one `feedback/{feedbackId}` document appears with server timestamps and `status: "pending"`.
+Report exact files changed, Function name and region, Firestore schema, rate-limit behavior, deployment results, and any Firebase project or rules work that still requires console access.
 
 ## Optional AI and GitHub automation
 
-After Firestore storage works, use the `automate-feedback-github-issues` skill to add:
+After storage works, use `automate-feedback-github-issues` to add:
 
 - Gemini triage through Vertex AI without a Gemini API key;
-- priority, title, summary, and duplicate-key generation;
-- idempotent Firestore processing;
+- structured prioritization and sensitive-data checks;
+- semantic and feedback-specific idempotency;
 - GitHub App authentication;
-- automatic GitHub Issue creation for qualifying feedback.
+- staged automatic GitHub Issue creation.
 
-Keep this as a separate second stage so storage remains reliable when Vertex AI or GitHub is unavailable.
+Keep this as a separate second stage so feedback storage remains reliable when Vertex AI or GitHub is unavailable.
 
 ## Troubleshooting
 
-- `not found`: Swift region/name does not match the deployed callable, or it is not deployed.
-- `permission-denied`: auth or App Check enforcement exists in the project but the app is not satisfying it.
-- `resource-exhausted`: rate limit is working.
+- `not found`: Swift name/region does not match the deployed callable, or it is not deployed.
+- `permission-denied`: existing auth or App Check enforcement is not satisfied.
+- `resource-exhausted`: the rate limit is working.
 - `invalid-argument`: payload validation failed.
-- feedback never leaves `pending`: the optional processor is not deployed or failed before claiming the document.
+- feedback remains `pending`: the optional processor is absent or failed before claiming it.
