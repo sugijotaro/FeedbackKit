@@ -50,6 +50,7 @@ final class FeedbackKitTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testFeedbackSheetSupportsOptionalReviewActionForAsyncSubmission() {
         let submit: (Feedback) async throws -> Void = { _ in }
         let review: (Feedback) -> Void = { _ in }
@@ -60,6 +61,7 @@ final class FeedbackKitTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testFeedbackSheetSupportsOptionalReviewActionForSyncSubmission() {
         let submit: (Feedback) -> Void = { _ in }
         let review: (Feedback) -> Void = { _ in }
