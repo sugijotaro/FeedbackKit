@@ -18,6 +18,12 @@ jobs:
         run: swift --version
       - name: Run tests
         run: swift test
+      - name: Confirm appName is not public API
+        run: |
+          if grep -R "appName" Sources README.md; then
+            echo "appName must not be part of FeedbackKit's public API or examples."
+            exit 1
+          fi
 
   skills:
     name: Agent Skills
@@ -34,5 +40,6 @@ jobs:
         run: |
           set -euo pipefail
           npx -y skills add . --list | tee /tmp/skills.txt
+          grep -q "integrate-feedbackkit-complete" /tmp/skills.txt
           grep -q "integrate-feedbackkit-firebase" /tmp/skills.txt
           grep -q "automate-feedback-github-issues" /tmp/skills.txt
