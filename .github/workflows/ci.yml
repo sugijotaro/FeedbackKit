@@ -18,12 +18,19 @@ jobs:
         run: swift --version
       - name: Run tests
         run: swift test
-      - name: Confirm appName is not public API
+      - name: Confirm public API and UI-only boundary
+        shell: bash
         run: |
+          set -euo pipefail
           if grep -R "appName" Sources README.md; then
             echo "appName must not be part of FeedbackKit's public API or examples."
             exit 1
           fi
+          if grep -R -E "import UIKit|UIPasteboard|NSPasteboard|apps\.apple\.com/app/id[0-9]" Sources; then
+            echo "Clipboard implementations and app-specific App Store URLs belong to host apps."
+            exit 1
+          fi
+          grep -q "onWriteAppStoreReview" Sources/FeedbackKit/FeedbackSheet.swift
 
   skills:
     name: Agent Skills
@@ -43,3 +50,4 @@ jobs:
           grep -q "integrate-feedbackkit-complete" /tmp/skills.txt
           grep -q "integrate-feedbackkit-firebase" /tmp/skills.txt
           grep -q "automate-feedback-github-issues" /tmp/skills.txt
+          grep -q "add-feedbackkit-app-store-review" /tmp/skills.txt
