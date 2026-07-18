@@ -39,9 +39,34 @@ FeedbackSheet { feedback in
 
 Firebase, API calls, and other network handling are implemented by the host app. FeedbackKit itself remains UI-only.
 
+## Optional App Store Review Action
+
+A host app can add an optional action to the successful-completion screen:
+
+```swift
+FeedbackSheet(
+    onSubmit: { feedback in
+        try await submitFeedback(feedback)
+    },
+    onWriteAppStoreReview: { feedback in
+        reviewHandoff.open(feedback)
+    }
+)
+```
+
+FeedbackKit only displays the button and passes the submitted `Feedback` value back after an explicit tap. The host app owns its App Store ID, clipboard handling, review URL, privacy policy, and error handling.
+
+For a manually initiated review, Apple documents opening the product page with:
+
+```text
+https://apps.apple.com/app/id<APP_STORE_ID>?action=write-review
+```
+
+The App Store does not provide a supported way to prefill or automatically submit the written review.
+
 ## Agent Skills
 
-This repository also contains Agent Skills for implementing the Firebase backend in an existing app repository.
+This repository contains Agent Skills for different integration scopes.
 
 List the available skills:
 
@@ -49,7 +74,7 @@ List the available skills:
 npx skills add sugijotaro/FeedbackKit --list
 ```
 
-### Complete integration
+### Choose an implementation scope
 
 ```bash
 npx skills add sugijotaro/FeedbackKit \
@@ -58,9 +83,18 @@ npx skills add sugijotaro/FeedbackKit \
   -y
 ```
 
-Use this when an agent should add the Swift Package, present the sheet, store submissions in Firestore, analyze them with Gemini on Vertex AI, and create qualifying GitHub Issues.
+This orchestration Skill first asks which capabilities the user wants:
 
-### Store feedback in Firestore only
+- feedback form UI only;
+- Firebase and Firestore storage;
+- Gemini triage and GitHub Issue automation;
+- a post-submission App Store review handoff;
+- a persistent Settings review link;
+- or all capabilities.
+
+It then applies only the selected Skills and validates the corresponding implementation.
+
+### Store feedback in Firestore
 
 ```bash
 npx skills add sugijotaro/FeedbackKit \
@@ -69,9 +103,9 @@ npx skills add sugijotaro/FeedbackKit \
   -y
 ```
 
-This skill adds the Swift FirebaseFunctions submitter, callable `submitFeedback` function, validation, anonymous rate limiting without requiring App Check, server-only Firestore storage, and the `feedback/{feedbackId}` schema.
+This Skill adds the Swift FirebaseFunctions submitter, callable `submitFeedback` function, validation, anonymous rate limiting without requiring App Check, server-only Firestore storage, and the `feedback/{feedbackId}` schema.
 
-### Add AI triage and GitHub Issues only
+### Add AI triage and GitHub Issues
 
 ```bash
 npx skills add sugijotaro/FeedbackKit \
@@ -80,7 +114,7 @@ npx skills add sugijotaro/FeedbackKit \
   -y
 ```
 
-This skill extends an existing Firebase feedback backend with:
+This Skill extends an existing Firebase feedback backend with:
 
 - a Firestore create trigger running on Cloud Functions 2nd gen;
 - Gemini analysis through Vertex AI using the Cloud Functions runtime service account;
@@ -90,5 +124,16 @@ This skill extends an existing Firebase feedback backend with:
 - GitHub App authentication with short-lived installation tokens;
 - staged rollout with automatic Issue creation disabled until triage quality is reviewed;
 - automatic GitHub Issue creation for qualifying bug reports and feature requests.
+
+### Add an App Store review handoff
+
+```bash
+npx skills add sugijotaro/FeedbackKit \
+  --skill add-feedbackkit-app-store-review \
+  --agent codex \
+  -y
+```
+
+This Skill adds host-owned App Store ID configuration, optional message copying after an explicit tap, the `action=write-review` deep link, privacy safeguards, and an optional persistent Settings review link.
 
 The GitHub App private key must be stored in Secret Manager. GitHub cannot create Issues without authentication.
