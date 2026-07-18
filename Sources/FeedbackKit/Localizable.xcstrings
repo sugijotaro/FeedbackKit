@@ -306,6 +306,38 @@
           }
         }
       }
+    },
+    "feedback.writeAppStoreReview" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write an App Store review"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App Storeにもレビューを書く"
+          }
+        }
+      }
+    },
+    "feedback.writeAppStoreReview.note" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your message can be copied for reuse. App Store reviews are public."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "入力内容を再利用できるようコピーできます。App Storeのレビューは公開されます。"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

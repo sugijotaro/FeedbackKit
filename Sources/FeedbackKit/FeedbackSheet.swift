@@ -2,34 +2,39 @@ import SwiftUI
 
 public struct FeedbackSheet: View {
     private let onSubmit: (Feedback) async throws -> Void
+    private let onWriteAppStoreReview: ((Feedback) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isMessageFocused: Bool
     @State private var category: FeedbackCategory = .feedback
     @State private var message = ""
     @State private var isSubmitting = false
-    @State private var isCompleted = false
+    @State private var submittedFeedback: Feedback?
     @State private var errorMessage: String?
 
     public init(
-        onSubmit: @escaping (Feedback) async throws -> Void
+        onSubmit: @escaping (Feedback) async throws -> Void,
+        onWriteAppStoreReview: ((Feedback) -> Void)? = nil
     ) {
         self.onSubmit = onSubmit
+        self.onWriteAppStoreReview = onWriteAppStoreReview
     }
 
     public init(
-        onSubmit: @escaping (Feedback) -> Void
+        onSubmit: @escaping (Feedback) -> Void,
+        onWriteAppStoreReview: ((Feedback) -> Void)? = nil
     ) {
         self.onSubmit = { feedback in
             onSubmit(feedback)
         }
+        self.onWriteAppStoreReview = onWriteAppStoreReview
     }
 
     public var body: some View {
         NavigationStack {
             Group {
-                if isCompleted {
-                    completedContent
+                if let submittedFeedback {
+                    completedContent(submittedFeedback)
                 } else {
                     formContent
                 }
@@ -37,7 +42,7 @@ public struct FeedbackSheet: View {
             .navigationTitle(Text("feedback.title", bundle: .module))
             .feedbackNavigationTitleDisplayMode()
             .toolbar {
-                if isCompleted {
+                if submittedFeedback != nil {
                     ToolbarItem(placement: .confirmationAction) {
                         Button {
                             dismiss()
@@ -155,7 +160,7 @@ public struct FeedbackSheet: View {
         .scrollDismissesKeyboard(.interactively)
     }
 
-    private var completedContent: some View {
+    private func completedContent(_ feedback: Feedback) -> some View {
         VStack(spacing: 16) {
             Spacer()
 
@@ -173,13 +178,35 @@ public struct FeedbackSheet: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            Button {
-                dismiss()
-            } label: {
-                Text("feedback.close", bundle: .module)
+            if let onWriteAppStoreReview {
+                Button {
+                    onWriteAppStoreReview(feedback)
+                } label: {
+                    Text("feedback.writeAppStoreReview", bundle: .module)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 8)
+
+                Text("feedback.writeAppStoreReview.note", bundle: .module)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("feedback.close", bundle: .module)
+                }
+                .buttonStyle(.bordered)
+            } else {
+                Button {
+                    dismiss()
+                } label: {
+                    Text("feedback.close", bundle: .module)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 8)
             }
-            .buttonStyle(.borderedProminent)
-            .padding(.top, 8)
 
             Spacer()
         }
@@ -228,7 +255,7 @@ public struct FeedbackSheet: View {
         Task {
             do {
                 try await onSubmit(feedback)
-                isCompleted = true
+                submittedFeedback = feedback
             } catch {
                 errorMessage = error.localizedDescription
             }
