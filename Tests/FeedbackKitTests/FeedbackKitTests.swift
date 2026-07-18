@@ -49,4 +49,24 @@ final class FeedbackKitTests: XCTestCase {
             XCTAssertFalse(category.localizedTitle.isEmpty)
         }
     }
+
+    func testFeedbackSheetSupportsOptionalReviewActionForAsyncSubmission() {
+        let submit: (Feedback) async throws -> Void = { _ in }
+        let review: (Feedback) -> Void = { _ in }
+
+        _ = FeedbackSheet(
+            onSubmit: submit,
+            onWriteAppStoreReview: review
+        )
+    }
+
+    func testFeedbackSheetSupportsOptionalReviewActionForSyncSubmission() {
+        let submit: (Feedback) -> Void = { _ in }
+        let review: (Feedback) -> Void = { _ in }
+
+        _ = FeedbackSheet(
+            onSubmit: submit,
+            onWriteAppStoreReview: review
+        )
+    }
 }
