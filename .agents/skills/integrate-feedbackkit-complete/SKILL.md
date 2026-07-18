@@ -1,6 +1,6 @@
 ---
 name: integrate-feedbackkit-complete
-description: Integrate FeedbackKit end to end into an existing SwiftUI app: add the Swift Package and sheet UI, submit through Firebase Cloud Functions, store feedback in Firestore, analyze it with Gemini on Vertex AI without a Gemini API key, and create qualifying GitHub Issues through a GitHub App. Use when the user provides the FeedbackKit repository URL and asks to implement the whole workflow.
+description: "Integrate FeedbackKit end to end into an existing SwiftUI app: add the Swift Package and sheet UI, submit through Firebase Cloud Functions, store feedback in Firestore, analyze it with Gemini on Vertex AI without a Gemini API key, and create qualifying GitHub Issues through a GitHub App. Use when the user provides the FeedbackKit repository URL and asks to implement the whole workflow."
 metadata:
   short-description: Add FeedbackKit end to end
 ---
