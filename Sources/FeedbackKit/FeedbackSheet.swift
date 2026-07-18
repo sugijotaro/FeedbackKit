@@ -91,9 +91,14 @@ public struct FeedbackSheet: View {
     private var formContent: some View {
         Form {
             Section {
-                Text("feedback.description", bundle: .module)
-                    .font(.body)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(appName)
+                        .font(.headline)
+
+                    Text("feedback.description", bundle: .module)
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Section {
