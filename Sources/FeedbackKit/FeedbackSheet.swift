@@ -186,15 +186,27 @@ public struct FeedbackSheet: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .padding(.top, 8)
-            }
 
-            Button {
-                dismiss()
-            } label: {
-                Text("feedback.close", bundle: .module)
+                Text("feedback.writeAppStoreReview.note", bundle: .module)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("feedback.close", bundle: .module)
+                }
+                .buttonStyle(.bordered)
+            } else {
+                Button {
+                    dismiss()
+                } label: {
+                    Text("feedback.close", bundle: .module)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 8)
             }
-            .buttonStyle(onWriteAppStoreReview == nil ? .borderedProminent : .bordered)
-            .padding(.top, onWriteAppStoreReview == nil ? 8 : 0)
 
             Spacer()
         }
