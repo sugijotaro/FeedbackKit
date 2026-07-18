@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - RELEASE_VERSION
+      - RELEASE_NOTES.md
+      - Package.swift
+      - Sources/**
+      - Tests/**
+      - .agents/**
+      - AGENTS.md
+      - README.md
+      - .github/workflows/release.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: feedbackkit-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < RELEASE_VERSION)"
+          if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid semantic version: $version"
+            exit 1
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether release already exists
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+        shell: bash
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Test package
+        if: steps.existing.outputs.exists != 'true'
+        run: swift test
+
+      - name: Validate release inputs
+        if: steps.existing.outputs.exists != 'true'
+        shell: bash
+        run: |
+          python3 -m json.tool Sources/FeedbackKit/Localizable.xcstrings > /dev/null
+          test -s RELEASE_NOTES.md
+          if grep -R "appName" Sources README.md; then
+            echo "appName must not be part of the release API or examples."
+            exit 1
+          fi
+
+      - name: Create tag
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists."
+          else
+            git tag -a "$VERSION" "$GITHUB_SHA" -m "FeedbackKit $VERSION"
+            git push origin "$VERSION"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+        run: gh release create "$VERSION" --title "FeedbackKit $VERSION" --notes-file RELEASE_NOTES.md --verify-tag
