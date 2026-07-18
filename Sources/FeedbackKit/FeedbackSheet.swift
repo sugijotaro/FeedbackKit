@@ -1,7 +1,6 @@
 import SwiftUI
 
 public struct FeedbackSheet: View {
-    private let appName: String
     private let onSubmit: (Feedback) async throws -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -13,18 +12,14 @@ public struct FeedbackSheet: View {
     @State private var errorMessage: String?
 
     public init(
-        appName: String,
         onSubmit: @escaping (Feedback) async throws -> Void
     ) {
-        self.appName = appName
         self.onSubmit = onSubmit
     }
 
     public init(
-        appName: String,
         onSubmit: @escaping (Feedback) -> Void
     ) {
-        self.appName = appName
         self.onSubmit = { feedback in
             onSubmit(feedback)
         }
@@ -91,14 +86,9 @@ public struct FeedbackSheet: View {
     private var formContent: some View {
         Form {
             Section {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(appName)
-                        .font(.headline)
-
-                    Text("feedback.description", bundle: .module)
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                }
+                Text("feedback.description", bundle: .module)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
             }
 
             Section {
