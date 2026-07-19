@@ -84,7 +84,7 @@ public struct FeedbackSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
         .interactiveDismissDisabled(isSubmitting)
     }
 
