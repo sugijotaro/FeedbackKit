@@ -92,6 +92,48 @@ A minimal package commonly includes:
 
 Use current compatible versions and commit the lockfile. CI should use `npm ci`.
 
+## Generated files and `.gitignore`
+
+Before installing dependencies or building Functions, inspect the repository's applicable `.gitignore` files and add any missing generated-file entries. For the common repository layout above, the root `.gitignore` should normally contain:
+
+```gitignore
+firebase/functions/node_modules/
+firebase/functions/lib/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+```
+
+If the Functions directory has its own `.gitignore`, use paths relative to that directory instead:
+
+```gitignore
+node_modules/
+lib/
+```
+
+Adapt the paths to the host repository and package manager. Do not add duplicate rules when an equivalent pattern such as `**/node_modules/` already exists.
+
+Never ignore or delete source and configuration files that must be reviewed or committed, including:
+
+```text
+package.json
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+tsconfig.json
+src/
+firebase.json
+firestore.rules
+```
+
+Commit the package-manager lockfile. After dependency installation and every build, run:
+
+```bash
+git status --short --branch --untracked-files=all
+```
+
+The integration is not complete while `node_modules/`, `lib/`, other compiler output, emulator data, or Firebase debug logs appear as untracked files. Add precise ignore rules before reporting completion. Do not use `git clean`, delete unknown files, or silently remove already tracked generated files; inspect them first and report any migration that needs user approval.
+
 ## Swift submitter
 
 Create a small service in the host app, for example:
@@ -206,7 +248,8 @@ Before finishing:
 5. deploy only the callable Function first;
 6. submit one item from the app and confirm exactly one `feedback/{feedbackId}` document with server timestamps and `status: "pending"`;
 7. review and merge Firestore rules before any Rules deployment;
-8. confirm logs contain neither the message nor request address.
+8. confirm logs contain neither the message nor request address;
+9. confirm generated dependency and build directories remain ignored and `git status` contains only intentional source, configuration, and lockfile changes.
 
 Report exact files changed, Function name and region, Firestore schema, rate-limit behavior, deployment results, and any Firebase project or rules work that still requires console access.
 
