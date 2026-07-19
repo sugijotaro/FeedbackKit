@@ -51,3 +51,16 @@ jobs:
           grep -q "integrate-feedbackkit-firebase" /tmp/skills.txt
           grep -q "automate-feedback-github-issues" /tmp/skills.txt
           grep -q "add-feedbackkit-app-store-review" /tmp/skills.txt
+      - name: Validate generated-file hygiene guidance
+        shell: bash
+        run: |
+          set -euo pipefail
+          for skill in \
+            .agents/skills/integrate-feedbackkit-complete/SKILL.md \
+            .agents/skills/integrate-feedbackkit-firebase/SKILL.md \
+            .agents/skills/automate-feedback-github-issues/SKILL.md
+          do
+            grep -q 'firebase/functions/node_modules/' "$skill"
+            grep -q 'firebase/functions/lib/' "$skill"
+            grep -q 'git status --short --branch --untracked-files=all' "$skill"
+          done
