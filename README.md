@@ -39,6 +39,25 @@ FeedbackSheet { feedback in
 
 Firebase, API calls, and other network handling are implemented by the host app. FeedbackKit itself remains UI-only.
 
+## Shake to Report
+
+On iOS, attach `feedbackSheetOnShake` near the root of the app's view hierarchy. A shake opens a medium-height prompt inspired by familiar “report a problem” flows. The prompt can open `FeedbackSheet` or disable future shake detection.
+
+```swift
+struct RootView: View {
+    @AppStorage("isShakeFeedbackEnabled") private var isShakeFeedbackEnabled = true
+
+    var body: some View {
+        ContentView()
+            .feedbackSheetOnShake(isEnabled: $isShakeFeedbackEnabled) { feedback in
+                try await submitFeedback(feedback)
+            }
+    }
+}
+```
+
+The binding controls shake detection at runtime and lets the person disable it from the prompt. The host app owns persistence, submission, analytics, and any app-specific policy. Apply the modifier once; adding it to multiple visible views can present duplicate prompts.
+
 ## Optional App Store Review Action
 
 A host app can add an optional action to the successful-completion screen:

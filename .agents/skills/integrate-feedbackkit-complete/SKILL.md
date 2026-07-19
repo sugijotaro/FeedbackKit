@@ -1,8 +1,6 @@
 ---
 name: integrate-feedbackkit-complete
-description: Orchestrate FeedbackKit integration into an existing SwiftUI app. First clarify how far the user wants to go, then add the selected combination of the Swift Package and sheet UI, Firebase and Firestore storage, Gemini triage on Vertex AI, GitHub Issue automation, and an optional App Store review handoff. Use when the user provides the FeedbackKit repository URL or asks what FeedbackKit can implement.
-metadata:
-  short-description: Choose and add FeedbackKit features
+description: Orchestrate FeedbackKit integration into an existing SwiftUI app. First clarify how far the user wants to go, then add the selected combination of the Swift Package and sheet UI, optional shake-to-report prompt and disable setting, Firebase and Firestore storage, Gemini triage on Vertex AI, GitHub Issue automation, and an optional App Store review handoff. Use when the user provides the FeedbackKit repository URL or asks what FeedbackKit can implement.
 ---
 
 # Integrate FeedbackKit
@@ -36,6 +34,7 @@ FeedbackKitでは次の範囲を実装できます。どこまで進めますか
 追加オプション
 4. 送信後のApp Storeレビュー導線
 5. 設定画面の常設レビューリンク
+6. シェイクして報告（無効化設定つき）
 
 「全部」でも大丈夫です。
 ```
@@ -95,7 +94,22 @@ This adds:
 
 This scope requires Firebase storage. If the user selects AI and GitHub automation, include scope B even when they did not name it separately.
 
-### D. App Store review handoff
+### D. Shake to report
+
+On iOS, add the modifier once near the root of the host app's visible view hierarchy:
+
+```swift
+@AppStorage("isShakeFeedbackEnabled") private var isShakeFeedbackEnabled = true
+
+ContentView()
+    .feedbackSheetOnShake(isEnabled: $isShakeFeedbackEnabled) { feedback in
+        try await feedbackSubmissionService.submit(feedback)
+    }
+```
+
+The package detects the shake, presents a medium prompt, and lets the person continue to `FeedbackSheet` or turn shake detection off. Keep persistence in the host app by passing a `Binding<Bool>` from `@AppStorage`, settings state, or the app's existing preferences model. Use an app-specific preference key and default only in the host app. Do not attach the modifier to multiple simultaneously visible views. Treat Simulator shake commands as development checks; verify the physical gesture on a real iPhone when possible.
+
+### E. App Store review handoff
 
 Read and apply:
 
@@ -119,6 +133,7 @@ After scope is selected, determine only what the selected features need:
 
 - SwiftUI target, platforms, minimum OS, and Xcode project conventions;
 - settings/help/support location;
+- whether shake-to-report is requested, where the single root modifier belongs, and how the host persists its enabled setting;
 - existing localization, navigation, and dependency-injection patterns;
 - existing Firebase project and Functions conventions when storage is selected;
 - applicable root and nested `.gitignore` files when Firebase or Node tooling is selected;
@@ -219,6 +234,14 @@ When App Store review features are selected:
 - verify the numeric App Store ID and `action=write-review` URL;
 - verify no feedback body is logged;
 - test App Store opening on a real device when possible.
+
+When shake-to-report is selected:
+
+- verify a shake presents the dedicated prompt at the medium detent;
+- verify the report button opens `FeedbackSheet`;
+- verify disabling the toggle prevents subsequent shake presentation and persists after relaunch;
+- verify the modifier is attached only once in the active view hierarchy;
+- test on a real iPhone when possible.
 
 Add or update CI so the chosen integration remains buildable.
 

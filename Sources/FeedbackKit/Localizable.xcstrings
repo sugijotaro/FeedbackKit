@@ -275,6 +275,86 @@
         }
       }
     },
+    "feedback.shake.description" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shake your device whenever you want to send feedback about a technical problem."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "技術的な問題についてフィードバックを送りたいときは、端末をシェイクしてください。"
+          }
+        }
+      }
+    },
+    "feedback.shake.report" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report a problem"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "問題を報告"
+          }
+        }
+      }
+    },
+    "feedback.shake.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report a technical problem"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "技術的な問題を報告"
+          }
+        }
+      }
+    },
+    "feedback.shake.toggle.subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can turn this off at any time."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "いつでも無効にできます"
+          }
+        }
+      }
+    },
+    "feedback.shake.toggle.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shake device to report a problem"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端末をシェイクして問題を報告"
+          }
+        }
+      }
+    },
     "feedback.submit" : {
       "localizations" : {
         "en" : {

@@ -71,4 +71,26 @@ final class FeedbackKitTests: XCTestCase {
             onWriteAppStoreReview: review
         )
     }
+
+    #if os(iOS)
+    @MainActor
+    func testShakePresentationSupportsRuntimeEnablementAndAsyncSubmission() {
+        let submit: (Feedback) async throws -> Void = { _ in }
+
+        _ = EmptyView().feedbackSheetOnShake(
+            isEnabled: .constant(true),
+            onSubmit: submit
+        )
+    }
+
+    @MainActor
+    func testShakePresentationSupportsRuntimeEnablementAndSyncSubmission() {
+        let submit: (Feedback) -> Void = { _ in }
+
+        _ = EmptyView().feedbackSheetOnShake(
+            isEnabled: .constant(false),
+            onSubmit: submit
+        )
+    }
+    #endif
 }
