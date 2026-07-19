@@ -1,66 +1,26 @@
-# FeedbackKit v1.2.0
+# FeedbackKit v1.2.1
 
-FeedbackKit remains a reusable, UI-only SwiftUI feedback sheet. This release adds an optional post-submission App Store review handoff and expands the Agent Skills into a scope-aware integration workflow.
+This patch release strengthens the Firebase and GitHub automation Agent Skills so generated backend files do not remain untracked in host repositories.
 
 ## Highlights
 
-- New optional `onWriteAppStoreReview` completion action.
-- The review action appears only after a successful submission.
-- The exact submitted `Feedback` value is passed back to host-owned code after an explicit tap.
-- FeedbackKit keeps App Store IDs, clipboard APIs, review URLs, analytics policy, and product-specific values outside the package.
-- Japanese and English copy explains that App Store reviews are public.
-- New `add-feedbackkit-app-store-review` Agent Skill.
-- The complete integration Skill now asks which capabilities the user wants before editing the host project.
-- Scope choices cover UI only, Firebase and Firestore storage, Gemini and GitHub Issue automation, post-submission App Store review handoff, persistent Settings review link, or all capabilities.
-- CI validates all four Skills through `npx skills`, String Catalog JSON, Swift tests, the optional review API, and the UI-only package boundary.
+- `integrate-feedbackkit-firebase` now requires precise `.gitignore` rules for Functions dependencies, TypeScript output, emulator artifacts, and Firebase debug logs.
+- `automate-feedback-github-issues` applies the same repository-hygiene checks when adding AI triage and GitHub Issue automation.
+- `integrate-feedbackkit-complete` carries the requirement across all Firebase-backed implementation scopes.
+- Typical root-level patterns are documented:
 
-## Basic usage
-
-```swift
-FeedbackSheet { feedback in
-    try await submitFeedback(feedback)
-}
+```gitignore
+firebase/functions/node_modules/
+firebase/functions/lib/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
 ```
 
-## Optional App Store review handoff
+- Nested Functions repositories may use relative `node_modules/` and `lib/` rules instead.
+- Skills explicitly preserve source files, Firebase configuration, Firestore rules, and package-manager lockfiles.
+- Agents must inspect `git status --short --branch --untracked-files=all` after dependency installation and builds.
+- Agents must not use `git clean`, ignore an entire Firebase directory, or delete unknown files without inspection.
+- CI verifies that all Firebase-related Skills contain the generated-file guidance.
 
-```swift
-FeedbackSheet(
-    onSubmit: { feedback in
-        try await submitFeedback(feedback)
-    },
-    onWriteAppStoreReview: { feedback in
-        reviewHandoff.open(feedback)
-    }
-)
-```
-
-The host app may copy `feedback.message` only after the tap and open:
-
-```text
-https://apps.apple.com/app/id<APP_STORE_ID>?action=write-review
-```
-
-The App Store does not provide a supported way to prefill or automatically submit the written review.
-
-## Agent Skill installation
-
-Choose an implementation scope:
-
-```bash
-npx skills add sugijotaro/FeedbackKit \
-  --skill integrate-feedbackkit-complete \
-  --agent codex \
-  -y
-```
-
-Install only the App Store review handoff Skill:
-
-```bash
-npx skills add sugijotaro/FeedbackKit \
-  --skill add-feedbackkit-app-store-review \
-  --agent codex \
-  -y
-```
-
-Firebase, Vertex AI, GitHub, App Store metadata, clipboard handling, and secrets remain in the host application repository.
+FeedbackKit itself remains a reusable, UI-only SwiftUI package. Firebase, Vertex AI, GitHub, App Store metadata, and product-specific values remain in the host application repository.
