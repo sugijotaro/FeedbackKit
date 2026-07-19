@@ -50,7 +50,8 @@ Determine:
 4. target GitHub owner/repository for each `appId`;
 5. existing Firebase Admin, GitHub, AI, config, and secret conventions;
 6. current Vertex AI model lifecycle from official documentation;
-7. existing CI and deployment commands.
+7. existing CI and deployment commands;
+8. root and nested `.gitignore` rules that apply to the Functions directory.
 
 Do not move unrelated Firebase files or overwrite unrelated Firestore rules.
 
@@ -71,6 +72,35 @@ firebase/feedback-app-config.example.json
 ```
 
 Keep AI generation separate from GitHub mutation logic.
+
+## Generated files and `.gitignore`
+
+Before installing or updating Node dependencies, ensure generated files are ignored using paths appropriate to the host repository. For a root `.gitignore` and a backend under `firebase/functions`, commonly add:
+
+```gitignore
+firebase/functions/node_modules/
+firebase/functions/lib/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+```
+
+If `firebase/functions/.gitignore` is authoritative, use:
+
+```gitignore
+node_modules/
+lib/
+```
+
+Do not add redundant patterns when an existing rule already covers the path. Preserve and commit `package.json`, the package-manager lockfile, `tsconfig.json`, `src/`, Firebase configuration, and reviewed Firestore rules. Never ignore the whole `firebase/` or `functions/` directory.
+
+After `npm ci`, type-checking, tests, and production builds, run:
+
+```bash
+git status --short --branch --untracked-files=all
+```
+
+Do not report completion while dependency directories, TypeScript output, emulator data, coverage, temporary credential files, or Firebase debug logs remain untracked. Inspect unknown files before removal; do not use `git clean` as a substitute for precise ignore rules.
 
 ## Required input schema
 
@@ -210,6 +240,7 @@ Before finishing:
 8. enable automatic creation and submit one controlled actionable report;
 9. confirm exactly one Issue is created;
 10. replay the same feedback and confirm no second Issue;
-11. confirm sensitive, ambiguous, low-confidence, and praise submissions do not create Issues.
+11. confirm sensitive, ambiguous, low-confidence, and praise submissions do not create Issues;
+12. confirm generated dependencies, compiler output, emulator artifacts, and debug logs are ignored and final `git status` contains only intentional changes.
 
-Report exact files changed, deployed Function names, Firestore collections, required IAM and Secret Manager actions, tests performed, and any console or credential work that could not be completed.
+Report exact files changed, deployed Function names, Firestore collections, required IAM and Secret Manager actions, tests performed, final `git status`, and any console or credential work that could not be completed.

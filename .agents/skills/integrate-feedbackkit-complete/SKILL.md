@@ -72,7 +72,8 @@ This adds:
 - validation and anonymous rate limiting without requiring App Check;
 - server-only Firestore storage;
 - `feedback/{feedbackId}` documents with `status: "pending"`;
-- safe Firestore Rules integration without replacing unrelated rules.
+- safe Firestore Rules integration without replacing unrelated rules;
+- precise `.gitignore` entries for Functions dependencies, compiler output, emulator artifacts, and Firebase debug logs.
 
 ### C. Gemini triage and GitHub Issue automation
 
@@ -120,6 +121,7 @@ After scope is selected, determine only what the selected features need:
 - settings/help/support location;
 - existing localization, navigation, and dependency-injection patterns;
 - existing Firebase project and Functions conventions when storage is selected;
+- applicable root and nested `.gitignore` files when Firebase or Node tooling is selected;
 - authoritative Firestore rules when storage is selected;
 - target GitHub repository and available authentication when automation is selected;
 - numeric App Store ID and clipboard abstraction when review features are selected;
@@ -162,6 +164,28 @@ FeedbackSheet(
 
 Use the host app's tint, localization, navigation, error, analytics, and dependency-injection conventions. Keep FeedbackKit itself UI-only.
 
+## Generated-file hygiene for Firebase scopes
+
+When Firebase or GitHub automation is selected, update the host repository's existing `.gitignore` before running package installation or builds. Use repository-relative patterns and avoid duplicates. A common layout requires:
+
+```gitignore
+firebase/functions/node_modules/
+firebase/functions/lib/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+```
+
+A nested `firebase/functions/.gitignore` may instead use `node_modules/` and `lib/`. Preserve and commit package-manager lockfiles, TypeScript source, `package.json`, `tsconfig.json`, Firebase configuration, and Firestore rules. Never solve generated-file noise by ignoring an entire `firebase/` or `functions/` directory.
+
+After every dependency install and build, inspect:
+
+```bash
+git status --short --branch --untracked-files=all
+```
+
+Do not finish while generated dependencies, compiler output, emulator data, or debug logs remain untracked. Do not use `git clean` or delete unknown files without inspection.
+
 ## Validate according to selected scope
 
 Always:
@@ -178,7 +202,8 @@ When Firebase is selected:
 - test blank, oversized, malformed, and rapid-repeat payloads;
 - verify client Firestore access remains closed;
 - verify unrelated Firestore rules remain intact;
-- verify raw feedback and request addresses are not logged.
+- verify raw feedback and request addresses are not logged;
+- verify generated dependency and build paths are ignored and the worktree contains only intentional source, configuration, and lockfile changes.
 
 When Gemini and GitHub are selected:
 
@@ -218,9 +243,9 @@ For all scopes:
 
 Additionally require the relevant conditions:
 
-- Firebase selected: valid feedback reaches the callable and is stored in Firestore.
+- Firebase selected: valid feedback reaches the callable and is stored in Firestore, and generated Functions files remain ignored.
 - Gemini/GitHub selected: structured triage runs and one controlled actionable report creates exactly one Issue after automation is enabled.
 - Review handoff selected: the completion CTA receives the submitted feedback, copies only on tap when requested, and opens the correct App Store write-review URL.
 - Persistent review link selected: it opens the App Store review page without copying stale feedback.
 
-Report the selected scope, changed files, deployed resources, tests performed, and any credential-bound action that could not be completed.
+Report the selected scope, changed files, deployed resources, tests performed, final `git status`, and any credential-bound action that could not be completed.
