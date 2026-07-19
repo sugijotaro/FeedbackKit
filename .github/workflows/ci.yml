@@ -26,8 +26,12 @@ jobs:
             echo "appName must not be part of FeedbackKit's public API or examples."
             exit 1
           fi
-          if grep -R -E "import UIKit|UIPasteboard|NSPasteboard|apps\.apple\.com/app/id[0-9]" Sources; then
+          if grep -R -E "UIPasteboard|NSPasteboard|apps\.apple\.com/app/id[0-9]" Sources; then
             echo "Clipboard implementations and app-specific App Store URLs belong to host apps."
+            exit 1
+          fi
+          if grep -R -l "import UIKit" Sources | grep -v '^Sources/FeedbackKit/ShakeGestureDetector.swift$'; then
+            echo "UIKit use must stay limited to the iOS shake gesture detector."
             exit 1
           fi
           grep -q "onWriteAppStoreReview" Sources/FeedbackKit/FeedbackSheet.swift
