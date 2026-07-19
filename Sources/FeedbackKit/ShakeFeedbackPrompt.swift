@@ -3,7 +3,8 @@ import SwiftUI
 
 struct ShakeFeedbackPrompt: View {
     @Binding var isShakeEnabled: Bool
-    let onReport: () -> Void
+    let onReportProblem: () -> Void
+    let onSendFeedback: () -> Void
 
     var body: some View {
         VStack(spacing: 24) {
@@ -18,12 +19,21 @@ struct ShakeFeedbackPrompt: View {
                     .multilineTextAlignment(.center)
             }
 
-            Button(action: onReport) {
-                Text("feedback.shake.report", bundle: .module)
-                    .frame(maxWidth: .infinity)
+            VStack(spacing: 12) {
+                Button(action: onReportProblem) {
+                    Text("feedback.shake.report", bundle: .module)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+
+                Button(action: onSendFeedback) {
+                    Text("feedback.shake.sendFeedback", bundle: .module)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
 
             Divider()
 

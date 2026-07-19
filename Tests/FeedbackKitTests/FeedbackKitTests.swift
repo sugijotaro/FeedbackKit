@@ -56,6 +56,7 @@ final class FeedbackKitTests: XCTestCase {
         let review: (Feedback) -> Void = { _ in }
 
         _ = FeedbackSheet(
+            initialCategory: .bug,
             onSubmit: submit,
             onWriteAppStoreReview: review
         )
@@ -67,6 +68,7 @@ final class FeedbackKitTests: XCTestCase {
         let review: (Feedback) -> Void = { _ in }
 
         _ = FeedbackSheet(
+            initialCategory: .feedback,
             onSubmit: submit,
             onWriteAppStoreReview: review
         )

@@ -280,13 +280,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Shake your device whenever you want to send feedback about a technical problem."
+            "value" : "If a feature or the product isn't working correctly, you can send feedback to help improve this app."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "技術的な問題についてフィードバックを送りたいときは、端末をシェイクしてください。"
+            "value" : "機能または製品が正しく機能していない場合、このアプリの改善のためフィードバックを送信できます。"
           }
         }
       }
@@ -303,6 +303,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "問題を報告"
+          }
+        }
+      }
+    },
+    "feedback.shake.sendFeedback" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send other feedback"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "その他のフィードバックを送る"
           }
         }
       }

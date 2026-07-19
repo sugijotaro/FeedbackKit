@@ -41,7 +41,7 @@ Firebase, API calls, and other network handling are implemented by the host app.
 
 ## Shake to Report
 
-On iOS, attach `feedbackSheetOnShake` near the root of the app's view hierarchy. A shake opens a medium-height prompt inspired by familiar “report a problem” flows. The prompt can open `FeedbackSheet` or disable future shake detection.
+On iOS, attach `feedbackSheetOnShake` near the root of the app's view hierarchy. A shake opens a medium-height prompt inspired by familiar “report a problem” flows. Choosing “Report a problem” opens `FeedbackSheet` with the bug category selected; the secondary feedback action selects the general feedback category. The prompt can also disable future shake detection.
 
 ```swift
 struct RootView: View {

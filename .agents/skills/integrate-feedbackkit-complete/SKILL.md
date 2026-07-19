@@ -107,7 +107,26 @@ ContentView()
     }
 ```
 
-The package detects the shake, presents a medium prompt, and lets the person continue to `FeedbackSheet` or turn shake detection off. Keep persistence in the host app by passing a `Binding<Bool>` from `@AppStorage`, settings state, or the app's existing preferences model. Use an app-specific preference key and default only in the host app. Do not attach the modifier to multiple simultaneously visible views. Treat Simulator shake commands as development checks; verify the physical gesture on a real iPhone when possible.
+The package detects the shake and presents a medium prompt. “Report a problem” opens `FeedbackSheet` with `.bug` selected, while the secondary feedback action opens it with `.feedback` selected. The person can also turn shake detection off.
+
+Always provide a persistent control in the host app's Settings screen so shake-to-report can be enabled again after it is turned off. Bind that control to the exact same stored value passed to `feedbackSheetOnShake`:
+
+```swift
+struct FeedbackSettingsView: View {
+    @AppStorage("isShakeFeedbackEnabled") private var isShakeFeedbackEnabled = true
+
+    var body: some View {
+        Form {
+            Toggle(
+                "Shake device to report a problem",
+                isOn: $isShakeFeedbackEnabled
+            )
+        }
+    }
+}
+```
+
+Localize the label using the host app's conventions. Keep persistence in the host app by passing a `Binding<Bool>` from `@AppStorage`, settings state, or the app's existing preferences model. Use an app-specific preference key and default only in the host app. Do not add a second preference value for the Settings toggle, and do not attach the modifier to multiple simultaneously visible views. Treat Simulator shake commands as development checks; verify the physical gesture on a real iPhone when possible.
 
 ### E. App Store review handoff
 
@@ -240,6 +259,8 @@ When shake-to-report is selected:
 - verify a shake presents the dedicated prompt at the medium detent;
 - verify the report button opens `FeedbackSheet`;
 - verify disabling the toggle prevents subsequent shake presentation and persists after relaunch;
+- verify the host Settings screen exposes a persistent toggle backed by the same stored value;
+- verify that Settings toggle enables shake presentation again after it was disabled from the prompt;
 - verify the modifier is attached only once in the active view hierarchy;
 - test on a real iPhone when possible.
 
@@ -270,5 +291,6 @@ Additionally require the relevant conditions:
 - Gemini/GitHub selected: structured triage runs and one controlled actionable report creates exactly one Issue after automation is enabled.
 - Review handoff selected: the completion CTA receives the submitted feedback, copies only on tap when requested, and opens the correct App Store write-review URL.
 - Persistent review link selected: it opens the App Store review page without copying stale feedback.
+- Shake-to-report selected: disabling persists, a permanent host Settings toggle uses the same stored value, and that toggle successfully re-enables shake presentation.
 
 Report the selected scope, changed files, deployed resources, tests performed, final `git status`, and any credential-bound action that could not be completed.

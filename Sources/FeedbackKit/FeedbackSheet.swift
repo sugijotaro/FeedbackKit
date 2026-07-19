@@ -6,24 +6,28 @@ public struct FeedbackSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @FocusState private var isMessageFocused: Bool
-    @State private var category: FeedbackCategory = .feedback
+    @State private var category: FeedbackCategory
     @State private var message = ""
     @State private var isSubmitting = false
     @State private var submittedFeedback: Feedback?
     @State private var errorMessage: String?
 
     public init(
+        initialCategory: FeedbackCategory = .feedback,
         onSubmit: @escaping (Feedback) async throws -> Void,
         onWriteAppStoreReview: ((Feedback) -> Void)? = nil
     ) {
+        _category = State(initialValue: initialCategory)
         self.onSubmit = onSubmit
         self.onWriteAppStoreReview = onWriteAppStoreReview
     }
 
     public init(
+        initialCategory: FeedbackCategory = .feedback,
         onSubmit: @escaping (Feedback) -> Void,
         onWriteAppStoreReview: ((Feedback) -> Void)? = nil
     ) {
+        _category = State(initialValue: initialCategory)
         self.onSubmit = { feedback in
             onSubmit(feedback)
         }

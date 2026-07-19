@@ -41,6 +41,7 @@ private struct FeedbackShakeModifier: ViewModifier {
     @State private var isPromptPresented = false
     @State private var isFeedbackPresented = false
     @State private var shouldPresentFeedback = false
+    @State private var initialCategory: FeedbackCategory = .feedback
 
     func body(content: Content) -> some View {
         content
@@ -52,11 +53,13 @@ private struct FeedbackShakeModifier: ViewModifier {
             .sheet(isPresented: $isPromptPresented, onDismiss: promptDidDismiss) {
                 ShakeFeedbackPrompt(
                     isShakeEnabled: $isEnabled,
-                    onReport: requestFeedbackForm
+                    onReportProblem: requestProblemReport,
+                    onSendFeedback: requestGeneralFeedback
                 )
             }
             .sheet(isPresented: $isFeedbackPresented) {
                 FeedbackSheet(
+                    initialCategory: initialCategory,
                     onSubmit: onSubmit,
                     onWriteAppStoreReview: onWriteAppStoreReview
                 )
@@ -68,7 +71,16 @@ private struct FeedbackShakeModifier: ViewModifier {
         isPromptPresented = true
     }
 
-    private func requestFeedbackForm() {
+    private func requestProblemReport() {
+        requestFeedbackForm(initialCategory: .bug)
+    }
+
+    private func requestGeneralFeedback() {
+        requestFeedbackForm(initialCategory: .feedback)
+    }
+
+    private func requestFeedbackForm(initialCategory: FeedbackCategory) {
+        self.initialCategory = initialCategory
         shouldPresentFeedback = true
         isPromptPresented = false
     }
