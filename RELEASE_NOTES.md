@@ -1,26 +1,33 @@
-# FeedbackKit v1.2.1
+# FeedbackKit v1.3.0
 
-This patch release strengthens the Firebase and GitHub automation Agent Skills so generated backend files do not remain untracked in host repositories.
+This minor release adds an optional shake-to-report entry point on iOS, so people can reach the feedback form from anywhere in a host app without hunting for a settings screen.
 
 ## Highlights
 
-- `integrate-feedbackkit-firebase` now requires precise `.gitignore` rules for Functions dependencies, TypeScript output, emulator artifacts, and Firebase debug logs.
-- `automate-feedback-github-issues` applies the same repository-hygiene checks when adding AI triage and GitHub Issue automation.
-- `integrate-feedbackkit-complete` carries the requirement across all Firebase-backed implementation scopes.
-- Typical root-level patterns are documented:
+- New `feedbackSheetOnShake(isEnabled:onSubmit:onWriteAppStoreReview:)` View modifier for iOS.
+- A shake presents a medium-detent prompt with two actions: reporting a problem opens `FeedbackSheet` with the `.bug` category preselected, while the secondary action opens it with `.feedback`.
+- The prompt includes a toggle so the person can turn shake detection off without leaving the flow.
+- `FeedbackSheet` gains an `initialCategory` parameter, defaulting to `.feedback`. Existing initializers remain source compatible.
+- `FeedbackSheet` now uses only the `.large` presentation detent so long messages stay readable while typing.
+- Localized strings for the shake prompt were added to the package String Catalog.
 
-```gitignore
-firebase/functions/node_modules/
-firebase/functions/lib/
-firebase-debug.log*
-firestore-debug.log*
-ui-debug.log*
+## Host app responsibilities
+
+The modifier takes a `Binding<Bool>`, and the host app owns persistence:
+
+```swift
+@AppStorage("isShakeFeedbackEnabled") private var isShakeFeedbackEnabled = true
+
+ContentView()
+    .feedbackSheetOnShake(isEnabled: $isShakeFeedbackEnabled) { feedback in
+        try await feedbackSubmissionService.submit(feedback)
+    }
 ```
 
-- Nested Functions repositories may use relative `node_modules/` and `lib/` rules instead.
-- Skills explicitly preserve source files, Firebase configuration, Firestore rules, and package-manager lockfiles.
-- Agents must inspect `git status --short --branch --untracked-files=all` after dependency installation and builds.
-- Agents must not use `git clean`, ignore an entire Firebase directory, or delete unknown files without inspection.
-- CI verifies that all Firebase-related Skills contain the generated-file guidance.
+Attach the modifier once near the root of the visible view hierarchy; applying it to multiple simultaneously visible views can present duplicate prompts. Because the prompt lets people disable shake detection, host apps should also expose a persistent Settings toggle bound to the same stored value so the feature can be re-enabled later.
+
+## Agent Skills
+
+- `integrate-feedbackkit-complete` documents shake-to-report as an optional scope, including the required host Settings toggle and its verification steps.
 
 FeedbackKit itself remains a reusable, UI-only SwiftUI package. Firebase, Vertex AI, GitHub, App Store metadata, and product-specific values remain in the host application repository.
